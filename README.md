@@ -22,3 +22,4 @@ wget -qO- https://raw.githubusercontent.com/coding1618/open-shell/master/LNMT.sh
 ```
 突然感觉这个很简单没必要写教程了
 ```
+![](https://ilaok.com/wp-content/uploads/2018/06/donate-1.png)
