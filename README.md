@@ -20,5 +20,5 @@ wget -qO- https://raw.githubusercontent.com/coding1618/open-shell/master/LNMT.sh
 ```
 ### 4.搭建Jenkins环境
 ```
-
+突然感觉这个很简单没必要写教程了
 ```
