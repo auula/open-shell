@@ -1,0 +1,316 @@
+#!/bin/bash
+#linux上安装NGINX、MySQL、Tomcat脚本
+#Author coding QQ2420498526
+##如果想修改源文件请保留以上几行信息，谢谢开源的动力就是看着我写的轮子别人拿去使用还把我名字留在上面！！！！！
+echo -e "\033[32m Welcome use LNMT.\033[0m"
+echo -e "\033[36m#         #      #   #        #   ######### \033[0m"
+echo -e "\033[36m#         ##     #   ##      ##       #\033[0m"
+echo -e "\033[36m#         # #    #   # #    # #       #\033[0m"
+echo -e "\033[36m#         #  #   #   #  #  #  #       #\033[0m"
+echo -e "\033[36m#         #   #  #   #   ##   #       #\033[0m"
+echo -e "\033[36m#         #    # #   #        #       #\033[0m"
+echo -e "\033[36m#######   #     ##   #        #       #.sh\033[0m"
+echo -e "\033[33m Version：2.1 dev 2018 \033[0m"
+echo -e "\033[33m Support：Centos7 or above. \033[0m"
+echo -e "\033[33m Bug collect QQ：2420498526. \033[0m"
+echo -e "\033[33m Developers E_mail：coding1618@Gmail.com \033[0m"
+echo -e "\033[35m ################### Meun： ################### \033[0m"
+echo -e "\033[35m -01: Install NGINX \033[0m"
+echo -e "\033[35m -02: Install Java Development Kit \033[0m"
+echo -e "\033[35m -03: Install Tomcat Servers \033[0m"
+echo -e "\033[35m -04: Install MySQL5.7 \033[0m"
+echo -e "\033[34m -05：Install All Component \033[0m"
+echo -e "\033[35m -06: 配置项目反向代理并且绑定域名 \033[0m"
+echo -e "\033[31m PS: 推荐05项进行安装,如果你是单项安装的话,你安装完成后请不要重复！！！ \033[0m"
+
+#获取本机ip
+local_host="`hostname --fqdn`"
+
+##系统初始化
+OSInitialize(){
+	#一键安装上面四个依赖
+	yum -y install gcc zlib zlib-devel pcre-devel openssl openssl-devel
+	## 创建用户
+	# 创建用户组 dev
+	groupadd www
+	cd /
+	mkdir www
+	cd /www
+	mkdir /www/vhost
+	chmod 777 /www/vhost/*
+	rm -rf /usr/local/nginx/conf/nginx.conf
+	cd /usr/local/nginx/conf/
+	wget https://api.ilaok.com/nginx.conf
+}
+
+
+
+##安装nginx函数
+#2018年4月20日12:22:20
+
+installNginx(){
+	
+	read -p "你确定要安装吗？PS：如果已经安装请不要重复安装以免系统崩溃！！！(y/n): " a
+	if (($a == "y")); then
+    	echo "run start ------->>>>>>>"
+    	##下载nginx
+		wget http://nginx.org/download/nginx-1.13.7.tar.gz
+		tar -xvf nginx-1.13.7.tar.gz
+		#进入nginx目录
+		cd nginx-1.13.7
+		#执行命令
+		./configure
+		#执行make命令
+		make
+		#执行make install命令
+		make install
+		#测试配置文件
+		/usr/local/nginx/sbin/nginx -t
+		#开放80端口
+		firewall-cmd --zone=public --add-port=80/tcp --permanent
+		#启动nginx
+		/usr/local/nginx/sbin/nginx
+		#重新启动防火墙
+		systemctl stop firewalld.service  
+		systemctl start firewalld.service
+		rm -rf /usr/local/nginx/html/index.html
+		cd /usr/local/nginx/html
+		wget https://api.ilaok.com/lnmt/index.html
+		echo -e "\033[33m Nginx访问地址:http://"${local_host}":80 \033[0m"
+		echo -e "\033[33m Nginx-1.13.7安装目录为:/usr/local/nginx \033[0m"
+		echo -e "\033[32m Nginx installed successfully!.\033[0m"
+	fi
+}
+
+
+#安装JDK函数
+#2018年4月20日14:23:27
+installJDK(){
+	read -p "你确定要安装吗？PS：如果已经安装请不要重复安装以免系统崩溃！！！(y/n): " a
+	if (($a == "y")); then
+    	echo "run start ------->>>>>>>"
+    	echo -e "\033[31m 请在下方输入你的JDK的安装包的URL下载地址,并且是rpm格式！！！ \033[0m"
+		echo "请输入下载地址:"
+		read input
+		wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" $input -O JDK.rpm
+		rpm -ivh JDK.rpm
+		echo -e "\033[33m 查看JDK版本命令:java -version \033[0m"
+		echo -e "\033[32m JDK installed successfully!.\033[0m"
+	fi
+	
+}
+
+
+
+#安装Tomcat函数
+#2018年4月20日14:46:03
+installTomcat(){
+	read -p "你确定要安装吗？PS：如果已经安装请不要重复安装以免系统崩溃！！！(y/n): " a
+	if (($a == "y")); then
+    	echo "run start ------->>>>>>>"
+    	#echo -e "\033[31m 请在下方输入你的Tomcat的安装包的URL下载地址: \033[0m"
+		#echo "请输入下载地址:"
+		#read input
+		wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://mirrors.hust.edu.cn/apache/tomcat/tomcat-8/v8.5.30/bin/apache-tomcat-8.5.30.zip -O TomcatServers.zip
+		#unzip TomcatServers.zip unzip | mv `unzip -l test.zip | awk '{if(NR == 4){ print $4}}'`   Tomcat -d /www/
+		unzip TomcatServers.zip -d /www/
+		rm -rf /www/apache-tomcat-8.5.30/webapps/*
+		cd /www/apache-tomcat-8.5.30/webapps/
+		mkdir ROOT
+		cd ROOT
+		wget https://api.ilaok.com/index.jsp
+		cd /www/apache-tomcat-8.5.30/bin
+		chmod u+x *.sh
+		#开放8080端口
+		firewall-cmd --zone=public --add-port=8080/tcp --permanent
+		#重新启动防火墙
+		systemctl stop firewalld.service  
+		systemctl start firewalld.service
+		cd /www/apache-tomcat-8.5.30/bin/
+		./startup.sh 
+		echo -e "\033[33m Tomcat访问地址: http://"${local_host}":8080 \033[0m"
+		echo -e "\033[33m Tomcat安装目录: /www/apache-tomcat-8.5.30 \033[0m"
+		echo -e "\033[32m Tomcat installed successfully!.\033[0m"
+	fi
+	
+}
+
+
+installMYSQL(){
+	read -p "你确定要安装吗？PS：如果已经安装请不要重复安装以免系统崩溃！！！(y/n): " a
+	if (($a == "y")); then
+    	echo "run start ------->>>>>>>"
+    	wget http://dev.mysql.com/get/mysql57-community-release-el7-8.noarch.rpm
+		#cd /usr/local
+		yum localinstall mysql57-community-release-el7-8.noarch.rpm
+		yum repolist enabled | grep "mysql.*-community.*"
+		firewall-cmd --zone=public --add-port=3306/tcp --permanent
+		yum -y install mysql-community-server
+		grep 'temporary password' /var/log/mysqld.log
+		#启动mysql
+		systemctl start mysqld
+		systemctl enable mysqld
+		systemctl daemon-reload
+		echo 'mysql加入服务完成，正在添加开机自启动';
+
+		echo '添加开机自启动成功';
+
+	
+
+		#重新启动防火墙
+		systemctl stop firewalld.service  
+		systemctl start firewalld.service
+
+		#执行完后开启mysql服务
+		service mysql start
+		echo "查看MySQL密码的命令:grep 'temporary password' /var/log/mysqld.log" 
+		echo "当前MySQL的root用户密码为(冒号后面的字符串):" 
+		grep 'temporary password' /var/log/mysqld.log
+		#GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'Mysql.123456' WITH GRANT OPTION; 
+		echo -e "\033[33m 修改MySQL密码可以使用sql命令(请保证你已经登录):ALTER USER 'root'@'localhost' IDENTIFIED BY '新密码';\033[0m"
+	fi
+	
+}
+
+default(){
+	touch /www/vhost/default.conf
+	echo "server {
+ 			listen 80;
+ 			server_name localhost;
+ 			location / {
+    			proxy_pass http://localhost:8080/;
+   				proxy_set_header        Host $host;
+    			proxy_set_header        X-Real-IP $remote_addr;
+    			proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+ 			}    
+		}" >  /www/vhost/default.conf
+}
+
+
+bindingDomain(){
+	echo -e "\033[31m 注意:在操作此项时请保证你的NGINX和Tomcat已经成功安装!!! \033[0m"
+	echo -e "\033[37m 请输入你的域名: \033[0m"
+	read domain
+	echo -e "\033[37m 请输入反向代理的Tomcat项目地址: \033[0m"
+	read TomcatURL
+	touch /www/vhost/${domain}.conf
+    echo "server {
+        listen       80;
+        server_name  "${domain}";
+
+        #charset koi8-r;
+
+        #access_log  logs/host.access.log  main;
+
+        location / {
+      		proxy_pass "${TomcatURL}";
+    	}
+	
+	}" >  /www/vhost/${domain}.conf
+	echo -e "\033[33m 如果你想删除绑定的域名请去/www/vhost/目录下删除对应的配置文件！ \033[0m"
+	/usr/local/nginx/sbin/nginx -s reload
+	echo -e "\033[32m BindingDomain successfully!.\033[0m"
+}
+
+ALL(){
+
+
+	read -p "你确定要安装吗？PS：如果已经安装请不要重复安装以免系统崩溃！！！(y/n): " a
+	if (($a == "y")); then
+    	echo "run start ------->>>>>>>"
+    	OSInitialize
+		installNginx
+		installJDK
+		installTomcat
+		installMYSQL
+		echo -e "\033[33m Nginx访问地址:http://"${local_host}":80 \033[0m"
+		echo -e "\033[33m Nginx-1.13.7安装目录为:/usr/local/nginx \033[0m"
+		echo -e "\033[33m 查看JDK版本命令:java -version \033[0m"
+		echo -e "\033[33m Tomcat访问地址: http://"${local_host}":8080 \033[0m"
+		echo -e "\033[33m Tomcat安装目录: /www/apache-tomcat-8.5.30 \033[0m"
+		echo "查看MySQL初始化密码的命令:grep 'temporary password' /var/log/mysqld.log" 
+		#echo "当前MySQL的root用户密码为(冒号后面的字符串):" 
+		grep 'temporary password' /var/log/mysqld.log
+		#GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'Mysql.123456' WITH GRANT OPTION; 
+		echo -e "\033[33m 修改MySQL密码可以使用sql命令(请保证你已经登录):ALTER USER 'root'@'localhost' IDENTIFIED BY '新密码';\033[0m"
+	fi
+
+
+	
+}
+
+if [ `whoami` = "root" ];then  
+    echo -e "\033[32m >>>环境监测成功.\033[0m"
+
+    case  "$1"  in   
+# 注意, 变量是被""引用的.   
+  
+  "01"  | "-01"  )  
+  # 接受大写或者小写输入.   
+  echo  
+  echo 
+  echo -e "\033[32m >>>开始编译安装NGINX.\033[0m"
+  OSInitialize
+  installNginx
+  ;;  
+# 注意, 每个选项后边都要以双分号;;结尾.   
+  
+  "02"  | "-02"  )  
+  echo  
+  echo 
+  echo -e "\033[32m >>>开始编译安装JDK.\033[0m"
+  OSInitialize
+  installJDK
+  ;;
+  "03"  | "-03"  )  
+  echo  
+  echo 
+  echo -e "\033[32m  >>>开始编译安装Tomcat.\033[0m"
+  OSInitialize
+  installTomcat
+  ;;   
+  "04"  | "-04"  )  
+  echo  
+  echo 
+  echo -e "\033[32m  >>>开始编译安装MySQL.\033[0m"
+  OSInitialize
+  installMYSQL
+  ;;
+  "05"  | "-05"  )  
+  echo  
+  echo 
+  echo -e "\033[32m  >>>开始编译安装所有组件.\033[0m"
+  OSInitialize
+  ALL
+  ;;  
+  "06"  | "-06"  )  
+  echo  
+  echo 
+  echo -e "\033[32m  >>>请根据提示进行操作.\033[0m"
+  OSInitialize
+  bindingDomain
+  ;;  
+# 后边的 Smith 和 Zane 的信息在这里就省略了.   
+  
+          * )  
+   # 默认选项.   
+   # 空输入(敲回车RETURN), 也适用于这里.   
+   echo  
+   echo "请传入相关指令序号."   
+  ;;  
+  
+esac
+
+else  
+	echo -e "\033[31m ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ Warningn: ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ \033[0m"
+    echo -e "\033[37mWarning:当前系统用户没有这台服务器root权限！\n请切换为root用户执行这个脚本,脚本需要root权限支持！ \033[0m" 
+fi  
+
+
+
+
+
+
+
+
+		
