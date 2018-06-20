@@ -16,7 +16,7 @@ wget -qO- https://raw.githubusercontent.com/coding1618/Google-images-shell/maste
 
 ### 3.搭建JavaWEB单项目环境
 ```
-
+wget -qO- https://raw.githubusercontent.com/coding1618/open-shell/master/LNMT.sh~ |bash
 ```
 ### 4.搭建Jenkins环境
 ```
